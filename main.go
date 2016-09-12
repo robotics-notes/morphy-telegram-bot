@@ -10,25 +10,22 @@ import (
 )
 
 var (
-	Bot                  *tgbotapi.BotAPI
-	TelegramBotToken     = os.Getenv("TELEGRAM_BOT_TOKEN")
-	PrettyGrammemesTable = map[int]string{
-		mystem.Substantive: "сущ.",
-		mystem.Verb:        "глаг.",
-	}
+	Bot              *tgbotapi.BotAPI
+	TelegramBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 )
 
 type Result struct {
 	form      string
+	lemma     string
 	grammemes []int
 }
 
 func (result *Result) String() string {
-	return fmt.Sprintf("%s - %v", result.form, result.PrettyGrammemes())
+	return fmt.Sprintf("%s (%s) - %s", result.form, result.lemma, result.PrettyGrammemes())
 }
 
 func (result *Result) Markdown() string {
-	return fmt.Sprintf("***%s*** - `%s`", result.form, result.PrettyGrammemes())
+	return fmt.Sprintf("*%s (%s)* - %s", result.form, result.lemma, result.PrettyGrammemes())
 }
 
 func (result *Result) PrettyGrammemes() string {
@@ -54,7 +51,7 @@ func handleInlineQuery(query *tgbotapi.InlineQuery) {
 	for i := 0; i < analyses.Count(); i++ {
 		lemma := analyses.GetLemma(i)
 		id := fmt.Sprintf("%s:%d", query.ID, i)
-		result := Result{lemma.Form(), lemma.StemGram()}
+		result := Result{lemma.Form(), lemma.Text(), lemma.StemGram()}
 		article := tgbotapi.NewInlineQueryResultArticleMarkdown(id, result.String(), result.Markdown())
 		articles = append(articles, article)
 	}
